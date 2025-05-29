@@ -25,6 +25,7 @@ Werkzeug
 WTForms
 flask-migrate
 flask_login
+python-dotenv
 gunicorn # Adicionar se ainda não estiver, para o servidor de produção
 # Adicionar o driver do banco de dados que você usará no PythonAnywhere, por exemplo:
 # mysqlclient  # Se for usar MySQL
