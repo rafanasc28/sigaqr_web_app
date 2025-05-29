@@ -16,7 +16,7 @@ class Config:
     # Chave Secreta - Deve ser definida pela variável de ambiente em produção
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'Rafa115295Lou@_fallback_local_dev' # Adicionei um fallback mais claro
 
-    # Configuração do Banco de Dados
+    # Configuração do Banco de Dadosa
     # 1. Tenta usar SQLALCHEMY_DATABASE_URI do ambiente (definido no WSGI)
     # 2. Se não encontrar, tenta usar DATABASE_URL do ambiente (para compatibilidade com outras plataformas)
     # 3. Se não encontrar nenhum, usa um SQLite local como fallback (para desenvolvimento)
