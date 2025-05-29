@@ -20,9 +20,12 @@ class Config:
     # 1. Tenta usar SQLALCHEMY_DATABASE_URI do ambiente (definido no WSGI)
     # 2. Se não encontrar, tenta usar DATABASE_URL do ambiente (para compatibilidade com outras plataformas)
     # 3. Se não encontrar nenhum, usa um SQLite local como fallback (para desenvolvimento)
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or \
-                              os.environ.get('DATABASE_URL') or \
-                              'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), 'sigaqr_local_dev.db')
+
+    SQLALCHEMY_DATABASE_URI = 'mysql+mysqlclient://sigaforalmox:Jq8#hW6&kS0!bZ3d@sigaforalmox.mysql.pythonanywhere-services.com/sigaforalmox$default'
+
+    #SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or \
+    #                          os.environ.get('DATABASE_URL') or \
+    #                          'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), 'sigaqr_local_dev.db')
 
     # Correção para URLs do PostgreSQL (se aplicável e se DATABASE_URL for usada)
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
