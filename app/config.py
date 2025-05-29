@@ -1,38 +1,48 @@
 import os
 from pathlib import Path
-# from dotenv import load_dotenv # Mantenha se usa .env para desenvolvimento local
+# A importação do load_dotenv é mais relevante para desenvolvimento local.
+# No PythonAnywhere, as variáveis de ambiente são definidas no arquivo WSGI.
+# from dotenv import load_dotenv
 
-# Caminho do .env (um nível acima do diretório deste arquivo)
+# Lógica para carregar .env (útil para desenvolvimento local, opcional para produção no PA)
+# Se você não usa um arquivo .env no desenvolvimento local, pode remover esta seção.
 # env_path = Path(__file__).resolve().parent.parent / '.env'
-
-# Carregar variáveis do .env se existir (mais útil para desenvolvimento local)
 # if env_path.exists():
-#     load_dotenv(env_path)
+#     load_dotenv(dotenv_path=env_path)
 # else:
-    # Esta mensagem pode aparecer nos logs do servidor se o .env não existir lá, o que é normal.
-    # print(f"⚠️  Arquivo .env não encontrado em {env_path}")
+    # Esta mensagem aparecerá nos logs do servidor do PythonAnywhere se o .env não for encontrado lá,
+    # o que é esperado, já que as variáveis de ambiente são definidas no arquivo WSGI.
+    # print(f"⚠️  Arquivo .env não encontrado em {env_path} (Isso é normal no servidor se as variáveis de ambiente são definidas de outra forma)")
 
 class Config:
-    # Chave Secreta - Deve ser definida pela variável de ambiente em produção
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'Rafa115295Lou@_fallback_local_dev' # Adicionei um fallback mais claro
+    # Chave Secreta:
+    # Em produção (PythonAnywhere), esta variável DEVE ser definida no seu arquivo WSGI.
+    # O valor aqui é um fallback para desenvolvimento local se a variável de ambiente não estiver definida.
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'uma_chave_secreta_local_muito_forte_e_diferente_da_de_producao'
 
-    # Configuração do Banco de Dadosa
-    # 1. Tenta usar SQLALCHEMY_DATABASE_URI do ambiente (definido no WSGI)
-    # 2. Se não encontrar, tenta usar DATABASE_URL do ambiente (para compatibilidade com outras plataformas)
-    # 3. Se não encontrar nenhum, usa um SQLite local como fallback (para desenvolvimento)
+    # Configuração do Banco de Dados:
+    # 1. Tenta usar SQLALCHEMY_DATABASE_URI do ambiente (que você define no arquivo WSGI para o MySQL do PythonAnywhere).
+    # 2. Se não encontrar, tenta usar DATABASE_URL do ambiente (para compatibilidade com outras plataformas ou preferências).
+    # 3. Se não encontrar nenhum dos dois, usa um banco de dados SQLite local como fallback (útil para desenvolvimento local).
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or \
+                              os.environ.get('DATABASE_URL') or \
+                              'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), 'sigaqr_local_dev.db')
 
-    SQLALCHEMY_DATABASE_URI = 'mysql+mysqlclient://sigaforalmox:Jq8#hW6&kS0!bZ3d@sigaforalmox.mysql.pythonanywhere-services.com/sigaforalmox$default'
-
-    #SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or \
-    #                          os.environ.get('DATABASE_URL') or \
-    #                          'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), 'sigaqr_local_dev.db')
-
-    # Correção para URLs do PostgreSQL (se aplicável e se DATABASE_URL for usada)
+    # Correção para URLs do PostgreSQL caso DATABASE_URL seja usada e seja para PostgreSQL.
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://", 1)
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Outras configurações
-    # DEBUG deve ser False em produção (controlado pela variável de ambiente FLASK_ENV ou DEBUG)
+    # Configuração de Debug:
+    # Em produção (PythonAnywhere), esta variável DEVE ser 'False'.
+    # Você pode definir FLASK_ENV=production ou DEBUG=False no seu arquivo WSGI.
     DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
+
+    # Outras configurações da sua aplicação podem vir aqui.
+    # Exemplo:
+    # MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    # MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
+    # MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
+    # MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    # MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
