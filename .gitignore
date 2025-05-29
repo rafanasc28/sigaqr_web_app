@@ -1,0 +1,24 @@
+# Ambientes Virtuais
+venv/
+*.pyc
+__pycache__/
+instance/
+.env
+
+# Arquivos de IDE (PyCharm)
+.idea/
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração local (se houver)
+config.local.py
+local_settings.py
+
+# Logs
+*.log
+
+# Banco de dados SQLite (se estiver usando para desenvolvimento e não quer versionar)
+*.sqlite3
+dev.db

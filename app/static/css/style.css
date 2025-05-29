@@ -1,0 +1,9 @@
+/* Destaque para itens remanejados */
+.card-remanejado {
+    border-left: 5px solid #17a2b8;
+}
+
+/* Destaque para itens novos */
+.card-novo {
+    border-left: 5px solid #007bff;
+}

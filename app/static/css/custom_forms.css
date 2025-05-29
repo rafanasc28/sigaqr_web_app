@@ -1,0 +1,41 @@
+/* Em app/static/css/custom_forms.css */
+
+.card.shadow .card-body {
+    /* background-color: #f0f2f5;  Experimente uma destas ou outra de sua preferência: */
+    background-color: #dfe3e8; /* Um pouco mais escuro */
+    /* background-color: #dfe3e8; */ /* Outra opção */
+}
+
+/* Em custom_forms.css */
+.form-control,
+.form-select {
+    background-color: #ffffff;
+    /* border: 1px solid #ced4da;  Altere esta linha para: */
+    border: 1px solid #b0b0b0; /* Uma borda cinza um pouco mais escura */
+    /* Ou se quiser usar a mesma cor do .form-control-highlight: */
+    /* border: 1px solid #a0a0a0; */
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--secondary-color, #3498db);
+    box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+    background-color: #fff;
+}
+
+/* Destaque opcional */
+.form-control-highlight {
+    border-width: 1px;
+    border-color: #a0a0a0;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+.form-control-highlight:focus {
+    border-color: var(--primary-color, #2c3e50);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25), inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.form-label {
+    font-weight: 500;
+    color: #333;
+}

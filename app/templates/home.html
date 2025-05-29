@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}SIGA QR - Página Inicial{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <!-- Card Cadastro -->
+        <div class="col">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <h3 class="card-title">
+                        <i class="bi bi-qr-code fs-1 text-primary"></i><br>
+                        Novo Cadastro
+                    </h3>
+                    <p class="card-text">Cadastre novos bens e gere QR Codes</p>
+                    <a href="{{ url_for('generate_qr') }}"
+                       class="btn btn-primary btn-lg">
+                        Acessar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Leitura -->
+        <div class="col">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <h3 class="card-title">
+                        <i class="bi bi-camera fs-1 text-success"></i><br>
+                        Ler QR Code
+                    </h3>
+                    <p class="card-text">Escanear QR Codes para consultar informações</p>
+                    <a href="{{ url_for('scan_qr') }}"
+                       class="btn btn-success btn-lg">
+                        Acessar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Consulta -->
+        <div class="col">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <h3 class="card-title">
+                        <i class="bi bi-list fs-1 text-info"></i><br>
+                        Consultar Bens
+                    </h3>
+                    <p class="card-text">Listagem completa com filtros e busca</p>
+                    <a href="{{ url_for('listar_bens') }}"
+                       class="btn btn-info btn-lg">
+                        Acessar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

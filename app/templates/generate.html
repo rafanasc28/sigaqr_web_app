@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if modo_edicao %}
+    Editar Bem
+  {% else %}
+    Cadastro de Bens
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card shadow mt-4">
+  <div class="card-header bg-primary text-white">
+    <h2 class="h4 mb-0">
+      {% if modo_edicao %}
+        Editar Item
+      {% else %}
+        Cadastro de Itens
+      {% endif %}
+    </h2>
+  </div>
+
+  <div class="card-body">
+    <!-- Seletor de Tipo de Item -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <label class="form-label">Tipo de Item:</label>
+        <select class="form-select" id="tipoItem" onchange="mostrarFormulario()" {% if modo_edicao %}disabled{% endif %}>
+          <option value="">Selecione...</option>
+          <option value="novo" {% if asset and asset.tipo =='novo' %}selected{% endif %}>Novo</option>
+          <option value="remanejado" {% if asset and asset.tipo =='remanejado' %}selected{% endif %}>Remanejado</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Formulário para Item Novo -->
+    <form method="POST" id="formNovo" style="display: none;">
+      <input type="hidden" name="tipo" value="novo">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Descrição:</label>
+          <input type="text" class="form-control" name="descricao"
+                 value="{{ asset.descricao if asset and asset.tipo == 'novo' else '' }}" required>
+        </div>
+
+        <div class="col-md-6">
+                    <label class="form-label">Localização:</label>
+                        <input type="text" class="form-control" name="localizacao"
+                            value="{{ asset.localizacao if asset and asset.tipo == 'novo' else '' }}" required>
+        </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Centro de Custos:</label>
+                        <input type="text" class="form-control" name="centro_custos"
+                            value="{{ asset.centro_custos if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">AFO:</label>
+                        <input type="text" class="form-control" name="afo"
+                            value="{{ asset.afo if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <!-- Dados Financeiros -->
+                <div class="col-md-6">
+                    <label class="form-label">Valor (R$):</label>
+                        <input type="number" step="0.01" class="form-control" name="valor_bem"
+                            value="{{ asset.afo if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Código Despesa:</label>
+                        <input type="text" class="form-control" name="codigo_despesa"
+                            value="{{ asset.codigo_despesa if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <!-- Datas -->
+                <div class="col-md-6">
+                    <label class="form-label">Data Entrada:</label>
+                        <input type="date" class="form-control" name="data_entrada"
+                            value="{{ asset.data_entrada if asset and asset.tipo == 'novo' else '' }}" required>
+
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Data DANFE (opcional):</label>
+                        <input type="date" class="form-control" name="data_danfe"
+                            value="{{ asset.data_danfe if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <!-- Responsável -->
+                <div class="col-md-6">
+                    <label class="form-label">Responsável:</label>
+                    <input type="text" class="form-control" name="responsavel"
+                    value="{{ asset.responsavel if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Matrícula:</label>
+                    <input type="text" class="form-control" name="matricula_responsavel"
+                    value="{{ asset.matricula_responsavel if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <!-- Campos Opcionais -->
+                <div class="col-md-6">
+                    <label class="form-label">Empenho:</label>
+                    <input type="text" class="form-control" name="empenho"
+                    value="{{ asset.empenho if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Processo Licitatório:</label>
+                    <input type="text" class="form-control" name="processo_licitatorio"
+                    value="{{ asset.processo_licitatorio if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">DANFE:</label>
+                    <input type="text" class="form-control" name="danfe"
+                    value="{{ asset.danfe if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Fornecedor:</label>
+                    <input type="text" class="form-control" name="fornecedor"
+                    value="{{ asset.fornecedor if asset and asset.tipo == 'novo' else '' }}" required>
+                </div>
+      </div>
+      <button type="submit" class="btn btn-primary mt-4">Salvar</button>
+    </form>
+
+    <!-- Formulário para Item Remanejado -->
+    <form method="POST" id="formRemanejado" style="display: none;">
+      <input type="hidden" name="tipo" value="remanejado">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Descrição:</label>
+          <input type="text" class="form-control" name="descricao"
+                 value="{{ asset.descricao if asset and asset.tipo == 'remanejado' else '' }}" required>
+        </div>
+                <div class="col-md-6">
+                    <label class="form-label">Número de Patrimônio:</label>
+                    <input type="text" class="form-control" name="numero_patrimonio"
+                    value="{{ asset.numero_patrimonio if asset and asset.tipo == 'remanejado' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Número de Série:</label>
+                    <input type="text" class="form-control" name="numero_serial"
+                           value="{{ asset.numero_serial if asset and asset.tipo == 'remanejado' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Marca:</label>
+                    <input type="text" class="form-control" name="marca"
+                           value="{{ asset.marca if asset and asset.tipo == 'remanejado' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Origem:</label>
+                    <input type="text" class="form-control" name="origem"
+                    value="{{ asset.origem if asset and asset.tipo == 'remanejado' else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Destino:</label>
+                    <input type="text" class="form-control" name="destino"
+                    value="{{ asset.destino if asset and asset.tipo == 'remanejado' else '' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Responsável:</label>
+                    <input type="text" class="form-control" name="responsavel"
+                    value="{{ asset.responsavel if asset and asset.tipo == 'remanejado' else '' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Matrícula:</label>
+                    <input type="text" class="form-control" name="matricula_responsavel"
+                    value="{{ asset.matricula_responsavel if asset and asset.tipo == 'remanejado' else '' }}" required>
+                </div>
+
+      </div>
+      <button type="submit" class="btn btn-primary mt-4">Salvar</button>
+    </form>
+  </div>
+</div>
+<script>
+    function validarFormulario() {
+    const tipo = document.getElementById('tipoItem').value;
+    if (!tipo) {
+        alert('Selecione o tipo de item!');
+        return false;
+    }
+    return true;
+}
+
+    function mostrarFormulario() {
+    const tipo = document.getElementById('tipoItem').value;
+    document.getElementById('formNovo').style.display = tipo === 'novo' ? 'block' : 'none';
+    document.getElementById('formRemanejado').style.display = tipo === 'remanejado' ? 'block' : 'none';
+}
+    // Mostra o formulário correto ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+        mostrarFormulario();
+});
+</script>
+{% endblock %}

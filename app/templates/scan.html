@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Leitor QR Code{% endblock %}
+
+{% block content %}
+<div class="card shadow mt-4">
+    <div class="card-header bg-primary text-white">
+        <h2 class="h4 mb-0">Leitor de QR Code</h2>
+    </div>
+
+    <div class="card-body">
+        <div id="scanner-container" class="mb-3">
+            <video id="webcam" width="100%" muted autoplay playsinline></video>
+        </div>
+
+        <div id="result" class="alert alert-info" style="display: none;">
+            <strong>Conteúdo lido:</strong> <span id="qr-content"></span>
+        </div>
+
+        <button id="start-scanner" class="btn btn-success">
+            <i class="bi bi-camera"></i> Iniciar Leitura
+        </button>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+    const video = document.getElementById('webcam');
+    const startButton = document.getElementById('start-scanner');
+    let scanning = false;
+
+    startButton.onclick = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            });
+            video.srcObject = stream;
+            await video.play();
+            startScanning();
+        } catch (err) {
+            alert('Erro ao acessar a webcam: ' + err.message);
+            console.error(err);
+        }
+    };
+
+    function startScanning() {
+        scanning = true;
+        startButton.disabled = true;
+        scanFrame();
+    }
+
+    function scanFrame() {
+        if (!scanning) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+        });
+
+        if (code) {
+            scanning = false;
+            video.srcObject.getTracks().forEach(track => track.stop());
+            window.location.href = `/detalhes/${encodeURIComponent(code.data)}`;
+        } else {
+            requestAnimationFrame(scanFrame);
+        }
+    }
+
+    window.addEventListener('beforeunload', () => {
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="POST">
+    <!-- Campo Exemplo -->
+    <div class="mb-3">
+        <label class="form-label">Descrição</label>
+        <input type="text" class="form-control" name="descricao"
+               value="{{ asset.descricao }}" required>
+    </div>
+
+    <!-- Seletor Dinâmico para Tipo -->
+    <div class="mb-3">
+        <label class="form-label">Localização</label>
+        <select class="form-select" name="localizacao">
+            {% for loc in ['Almoxarifado', 'Sala 101', 'Laboratório'] %}
+            <option value="{{ loc }}" {{ 'selected' if asset.localizacao == loc }}>
+                {{ loc }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+</form>
+{% endblock %}

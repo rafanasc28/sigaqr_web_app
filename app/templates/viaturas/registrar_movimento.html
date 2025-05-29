@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if modo_edicao %}Editar Movimento{% else %}Registrar Movimento de Viatura{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card shadow mt-4">
+  <div class="card-header bg-primary text-white">
+    <h2 class="h4 mb-0">
+      {% if modo_edicao %}
+        Editar Movimento da Viatura: {{ movimento.placa_veiculo }}
+      {% else %}
+        Registrar Novo Movimento de Viatura
+      {% endif %}
+    </h2>
+  </div>
+
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('viaturas.editar_movimento', movimento_id=movimento.id) if modo_edicao else url_for('viaturas.registrar_movimento') }}">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Data do Movimento:</label>
+          <input type="date" class="form-control" name="data_movimento" value="{{ data_movimento_form if modo_edicao else default_data }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Unidade:</label>
+          <input type="text" class="form-control" name="unidade" value="{{ movimento.unidade if modo_edicao else '' }}" placeholder="Ex: Colégio Municipal Montese" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Número de Ordem:</label>
+          <input type="text" class="form-control" name="ordem_servico" value="{{ movimento.ordem_servico if modo_edicao else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Hora de Entrada:</label>
+          <input type="time" class="form-control" name="hora_entrada" value="{{ hora_entrada_form if modo_edicao else default_hora_entrada }}" required>
+        </div>
+        {% if modo_edicao %}
+        <div class="col-md-6">
+          <label class="form-label">Hora de Saída:</label>
+          <input type="time" class="form-control" name="hora_saida" value="{{ hora_saida_form if modo_edicao and movimento.hora_saida else '' }}">
+        </div>
+        {% endif %}
+
+        <div class="col-md-4">
+          <label class="form-label">Tipo de Veículo:</label>
+          <input type="text" class="form-control" name="veiculo_tipo" value="{{ movimento.veiculo_tipo if modo_edicao else '' }}" placeholder="Ex: Caminhão, Van" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Placa:</label>
+          <input type="text" class="form-control" name="placa_veiculo" value="{{ movimento.placa_veiculo if modo_edicao else '' }}" placeholder="AAA-0000 ou AAA0X00" required style="text-transform: uppercase;">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Nome do Condutor:</label>
+          <input type="text" class="form-control" name="condutor_nome" value="{{ movimento.condutor_nome if modo_edicao else '' }}" required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Tipo de Movimentação:</label>
+            <select class="form-select" name="tipo_movimentacao" required>
+                <option value="">Selecione...</option>
+                {% set tipos_mov = ['Carga', 'Descarga', 'Devolução', 'Coleta', 'Transferência', 'Outro'] %}
+                {% for tipo in tipos_mov %}
+                    <option value="{{ tipo }}" {% if modo_edicao and movimento.tipo_movimentacao == tipo %}selected{% endif %}>{{ tipo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+         <div class="col-md-6">
+          <label class="form-label">Detalhe da Movimentação (se "Outro" ou Obs.):</label>
+          <input type="text" class="form-control" name="detalhe_movimentacao" value="{{ movimento.detalhe_movimentacao if modo_edicao else '' }}">
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">Responsável pelo Atendimento/Registro:</label>
+          <input type="text" class="form-control" name="responsavel_atendimento" value="{{ movimento.responsavel_atendimento if modo_edicao else current_user.username if current_user and current_user.is_authenticated else '' }}" required>
+          </div>
+      </div>
+
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">
+          {% if modo_edicao %}Salvar Alterações{% else %}Registrar Entrada{% endif %}
+        </button>
+        <a href="{{ url_for('viaturas.listar_movimentos') }}" class="btn btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

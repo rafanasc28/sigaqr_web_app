@@ -1,0 +1,158 @@
+**DOCUMENTAÇÃO DAS APIs DO SISTEMA PATRIMONIAL** *(v1.0)*  
+---
+
+### **1. VISÃO GERAL**  
+| Item               | Descrição                                  |  
+|--------------------|-------------------------------------------|  
+| **Tipo**           | RESTful API (JSON)                        |  
+| **Autenticação**   | *Em desenvolvimento* (JWT/Basic Auth)     |  
+| **Rate Limiting**  | 100 requisições/minuto por IP             |  
+| **Base URL**       | `https://api.patrimonio.example.com/v1`   |  
+
+---
+
+### **2. ENDPOINTS PRINCIPAIS**  
+
+#### **2.1 Gestão de Itens**  
+| Método | Endpoint               | Descrição                          | Parâmetros Obrigatórios           |  
+|--------|------------------------|-----------------------------------|----------------------------------|  
+| `GET`  | `/itens`               | Lista paginada de itens           | `?page=1&per_page=20`            |  
+| `POST` | `/itens`               | Cadastra novo item                | `tipo`, `descricao`, `localizacao` |  
+| `GET`  | `/itens/{id}`          | Detalhes completos de um item     | -                                |  
+| `PUT`  | `/itens/{id}`          | Atualiza item existente           | Campos a serem atualizados       |  
+| `DELETE` | `/itens/{id}`        | Remove item (soft delete)         | -                                |  
+
+**Exemplo de Request (POST):**  
+```json  
+{  
+  "tipo": "novo",  
+  "descricao": "Notebook Dell i7",  
+  "localizacao": "SALA-203",  
+  "valor_bem": 5899.90  
+}  
+```  
+
+**Exemplo de Response (201 Created):**  
+```json  
+{  
+  "id": "a3f8e2b1",  
+  "qr_code_url": "https://.../qr/a3f8e2b1",  
+  "mensagem": "Item registrado com sucesso"  
+}  
+```  
+
+---
+
+#### **2.2 Geração de QR Codes**  
+| Método | Endpoint               | Descrição                          |  
+|--------|------------------------|-----------------------------------|  
+| `GET`  | `/itens/{id}/qr`       | Retorna imagem PNG do QR Code     |  
+| `POST` | `/itens/batch-qr`      | Gera múltiplos QR Codes (até 50)  |  
+
+**Parâmetros (batch-qr):**  
+```json  
+{  
+  "itens_ids": ["id1", "id2"],  
+  "tamanho": 300  // em pixels  
+}  
+```  
+
+---
+
+#### **2.3 Relatórios**  
+| Método | Endpoint               | Descrição                          |  
+|--------|------------------------|-----------------------------------|  
+| `GET`  | `/relatorios/ativos`   | CSV de todos os itens ativos      |  
+| `POST` | `/relatorios/custom`   | Filtros avançados (JSON)          |  
+
+**Exemplo de Filtro:**  
+```json  
+{  
+  "tipo": "novo",  
+  "data_inicio": "2024-01-01",  
+  "valor_min": 1000  
+}  
+```  
+
+---
+
+### **3. CÓDIGOS DE STATUS**  
+| Código | Significado                           |  
+|--------|---------------------------------------|  
+| `200`  | OK - Requisição bem-sucedida          |  
+| `201`  | Created - Item criado                 |  
+| `400`  | Bad Request - Dados inválidos         |  
+| `401`  | Unauthorized - Autenticação falhou    |  
+| `403`  | Forbidden - Permissões insuficientes  |  
+| `404`  | Not Found - Item não existe           |  
+| `429`  | Too Many Requests - Limite excedido   |  
+
+---
+
+### **4. EXEMPLO COMPLETO (Flask)**  
+
+```python  
+from flask import Flask, request, jsonify  
+from flask_limiter import Limiter  
+
+app = Flask(__name__)  
+limiter = Limiter(app, key_func=get_remote_address)  
+
+@app.route('/api/v1/itens', methods=['POST'])  
+@limiter.limit("10/minute")  
+def criar_item():  
+    dados = request.get_json()  
+    
+    # Validação simplificada  
+    if not dados.get('descricao'):  
+        return jsonify({"erro": "Descrição é obrigatória"}), 400  
+    
+    novo_item = Item(**dados)  
+    db.session.add(novo_item)  
+    db.session.commit()  
+    
+    return jsonify({  
+        "id": novo_item.id,  
+        "qr_code": f"/itens/{novo_item.id}/qr"  
+    }), 201  
+
+@app.route('/api/v1/itens/<id>/qr', methods=['GET'])  
+def gerar_qr(id):  
+    item = Item.query.get_or_404(id)  
+    img = item.generate_qr_code()  
+    return send_file(img, mimetype='image/png')  
+```  
+
+---
+
+### **5. PRÓXIMOS PASSOS**  
+
+**Melhorias Planejadas para APIs**:  
+1. **Documentação Interativa**:  
+   - Integrar Swagger UI (`flasgger`)  
+   - Exemplos de requests/responses  
+
+2. **Segurança Avançada**:  
+   - JWT com refresh tokens  
+   - Criptografia de dados sensíveis  
+
+3. **Webhooks**:  
+   - Notificações em tempo real para:  
+     - Cadastro de novos itens  
+     - Alterações críticas  
+
+4. **Testes Automatizados**:  
+   - Suite de testes com pytest (cobertura >90%)  
+   - Mock de serviços externos  
+
+**Sugestão de Implementação**:  
+```bash  
+# Passo-a-passo para desenvolvimento  
+1. flask add-api-blueprint  # Criar estrutura modular  
+2. flask generate-spec     # Gerar spec OpenAPI  
+3. flask test-api          # Rodar testes  
+```  
+
+--- 
+
+**Nota**: Esta documentação deve ser atualizada a cada nova versão da API. Recomenda-se manter um changelog em `API_CHANGELOG.md`.
