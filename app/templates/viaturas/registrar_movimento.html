@@ -97,23 +97,20 @@
 {{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // O input onde o usuário digita o "Nº Identificador da Unidade"
     const identificadorInput = document.getElementById('numero_identificador_unidade_input');
-    // O input que exibirá o "Setor Solicitante" e cujo valor será enviado como 'unidade' para o backend
     const setorDisplayInput = document.getElementById('setor_solicitante_display');
 
     if (identificadorInput && setorDisplayInput) {
         identificadorInput.addEventListener('blur', function() {
-            const identificador = this.value.trim(); // trim() para remover espaços extras
+            const identificador = this.value.trim();
             if (identificador) {
-                fetch(`/viaturas/get_unidade_info/${identificador}`)
+                fetch(`/viaturas/get_unidade_info/${identificador}`) // Certifique-se que a URL está correta
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             setorDisplayInput.value = data.setor_solicitante;
                         } else {
-                            setorDisplayInput.value = 'Identificador não encontrado'; // Ou '' e um alerta
-                            // alert('Número Identificador da Unidade não encontrado.');
+                            setorDisplayInput.value = 'Identificador não encontrado';
                         }
                     })
                     .catch(error => {
@@ -121,18 +118,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         setorDisplayInput.value = 'Erro ao buscar';
                     });
             } else {
-                setorDisplayInput.value = ''; // Limpa se o identificador estiver vazio
+                setorDisplayInput.value = '';
             }
         });
 
-        // Se estiver em modo de edição e já houver um valor no campo do identificador,
-        // e o campo do setor estiver vazio (ou precisar ser revalidado),
-        // dispara o evento para preencher o setor ao carregar a página.
-        if (identificadorInput.value && !setorDisplayInput.value && {{ modo_edicao | default('false') | lower }}) {
-             identificadorInput.dispatchEvent(new Event('blur'));
-        } else if (identificadorInput.value && {{ request.method == 'POST' and not form_data.get('unidade') | default('', true) }}){
-             // Caso de POST com erro, repopular o setor se o identificador estiver preenchido
-             identificadorInput.dispatchEvent(new Event('blur'));
+        // Condições para disparar o 'blur' no carregamento da página
+        const isModoEdicao = {{ modo_edicao | default(false) | tojson }}; // Use tojson para booleanos
+        const isPostRequest = {{ (request.method == 'POST') | tojson }};
+
+        let repopularPostComUnidadeVazia = false;
+        {% if request.method == 'POST' %}
+            {# 'movimento' no template é 'form_data' quando request.method == 'POST' e não é modo_edicao #}
+            {# A variável 'movimento' no template conteria os dados do form em caso de POST #}
+            repopularPostComUnidadeVazia = {{ (movimento and movimento.get('unidade', '') == '') | tojson }};
+        {% endif %}
+
+        if (identificadorInput.value) {
+            if (isModoEdicao && !setorDisplayInput.value) {
+                identificadorInput.dispatchEvent(new Event('blur'));
+            } else if (isPostRequest && repopularPostComUnidadeVazia) {
+                 identificadorInput.dispatchEvent(new Event('blur'));
+            }
         }
     }
 });
