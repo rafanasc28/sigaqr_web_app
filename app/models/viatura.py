@@ -15,7 +15,7 @@ class MovimentoViatura(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid4()))
     data_movimento = db.Column(db.Date, nullable=False, default=now_br) # Data da ocorrência
-    setor_solicitante = db.Column(db.String(100), nullable=False) # Ex: Galpão Principal, Filial X
+    unidade = db.Column(db.String(100), nullable=False) # Ex: Galpão Principal, Filial X
     ordem_servico = db.Column(db.String(50)) # Ordem de serviço ou referência
 
     hora_entrada = db.Column(db.Time, nullable=False)
