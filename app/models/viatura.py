@@ -1,13 +1,21 @@
 from datetime import datetime
+
+import pytz
+
 from app import db
 from uuid import uuid4
+
+BR_TZ = pytz.timezone('America/Sao_Paulo')
+
+def now_br():
+    return datetime.now(BR_TZ)
 
 class MovimentoViatura(db.Model):
     __tablename__ = 'movimento_viatura'
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid4()))
-    data_movimento = db.Column(db.Date, nullable=False, default=datetime.utcnow) # Data da ocorrência
-    unidade = db.Column(db.String(100), nullable=False) # Ex: Galpão Principal, Filial X
+    data_movimento = db.Column(db.Date, nullable=False, default=now_br) # Data da ocorrência
+    setor_solicitante = db.Column(db.String(100), nullable=False) # Ex: Galpão Principal, Filial X
     ordem_servico = db.Column(db.String(50)) # Ordem de serviço ou referência
 
     hora_entrada = db.Column(db.Time, nullable=False)
@@ -22,8 +30,8 @@ class MovimentoViatura(db.Model):
 
     responsavel_atendimento = db.Column(db.String(100), nullable=False) # Funcionário que registrou/acompanhou
 
-    data_registro_sistema = db.Column(db.DateTime, default=datetime.utcnow)
-    ultima_atualizacao = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    data_registro_sistema = db.Column(db.DateTime, default=now_br)
+    ultima_atualizacao = db.Column(db.DateTime, default=now_br, onupdate=now_br)
 
     def to_dict(self):
         return {

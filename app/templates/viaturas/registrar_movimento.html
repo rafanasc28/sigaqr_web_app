@@ -24,14 +24,15 @@
           <input type="date" class="form-control" name="data_movimento" value="{{ data_movimento_form if modo_edicao else default_data }}" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Unidade:</label>
-          <input type="text" class="form-control" name="unidade" value="{{ movimento.unidade if modo_edicao else '' }}" placeholder="Ex: Colégio Municipal Montese" required>
+            <label class="form-label">Número de Ordem:</label>
+            {# Este input vai para o campo 'ordem_servico' do modelo #}
+            <input type="text" class="form-control form-control-sm" id="numero_identificador_unidade_input" name="ordem_servico" value="{{ movimento.ordem_servico if modo_edicao else request.form.get('ordem_servico', '') }}" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Número de Ordem:</label>
-          <input type="text" class="form-control" name="ordem_servico" value="{{ movimento.ordem_servico if modo_edicao else '' }}">
+            <label class="form-label">Setor Solicitante:</label>
+            {# Este input vai para o campo 'unidade' do modelo, mas será preenchido via JS ou backend #}
+            <input type="text" class="form-control form-control-sm" id="setor_solicitante_display" name="unidade" value="{{ movimento.unidade if modo_edicao else request.form.get('unidade', '') }}" readonly required>
         </div>
-
         <div class="col-md-6">
           <label class="form-label">Hora de Entrada:</label>
           <input type="time" class="form-control" name="hora_entrada" value="{{ hora_entrada_form if modo_edicao else default_hora_entrada }}" required>
@@ -45,7 +46,12 @@
 
         <div class="col-md-4">
           <label class="form-label">Tipo de Veículo:</label>
-          <input type="text" class="form-control" name="veiculo_tipo" value="{{ movimento.veiculo_tipo if modo_edicao else '' }}" placeholder="Ex: Caminhão, Van" required>
+          <select class="form-select form-select-sm" name="veiculo_tipo" required>
+              <option value="">Selecione...</option>
+                {% set tipos_veiculo_disponiveis = ['Passeio', 'Caminhão', 'Van', 'Ônibus', 'Motocicleta', 'Utilitário', 'Casa', 'Outro'] %}
+                {% for tipo in tipos_veiculo_disponiveis %} <option value="{{ tipo }}" {% if modo_edicao and movimento.veiculo_tipo == tipo %}selected{% endif %}>{{ tipo }}</option>
+                {% endfor %}
+          </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Placa:</label>
@@ -86,4 +92,49 @@
     </form>
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // O input onde o usuário digita o "Nº Identificador da Unidade"
+    const identificadorInput = document.getElementById('numero_identificador_unidade_input');
+    // O input que exibirá o "Setor Solicitante" e cujo valor será enviado como 'unidade' para o backend
+    const setorDisplayInput = document.getElementById('setor_solicitante_display');
+
+    if (identificadorInput && setorDisplayInput) {
+        identificadorInput.addEventListener('blur', function() {
+            const identificador = this.value.trim(); // trim() para remover espaços extras
+            if (identificador) {
+                fetch(`/viaturas/get_unidade_info/${identificador}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            setorDisplayInput.value = data.setor_solicitante;
+                        } else {
+                            setorDisplayInput.value = 'Identificador não encontrado'; // Ou '' e um alerta
+                            // alert('Número Identificador da Unidade não encontrado.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar unidade:', error);
+                        setorDisplayInput.value = 'Erro ao buscar';
+                    });
+            } else {
+                setorDisplayInput.value = ''; // Limpa se o identificador estiver vazio
+            }
+        });
+
+        // Se estiver em modo de edição e já houver um valor no campo do identificador,
+        // e o campo do setor estiver vazio (ou precisar ser revalidado),
+        // dispara o evento para preencher o setor ao carregar a página.
+        if (identificadorInput.value && !setorDisplayInput.value && {{ modo_edicao | default('false') | lower }}) {
+             identificadorInput.dispatchEvent(new Event('blur'));
+        } else if (identificadorInput.value && {{ request.method == 'POST' and not form_data.get('unidade') | default('', true) }}){
+             // Caso de POST com erro, repopular o setor se o identificador estiver preenchido
+             identificadorInput.dispatchEvent(new Event('blur'));
+        }
+    }
+});
+</script>
 {% endblock %}

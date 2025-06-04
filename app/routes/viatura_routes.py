@@ -1,7 +1,14 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+import pytz
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app import db
 from app.models.viatura import MovimentoViatura
 from datetime import datetime, time  # Adicionado time
+from ..utils import get_setor_por_identificador # Certifique-se que o import está correto
+
+
+
+# Defina o fuso horário de Brasília
+BR_TZ = pytz.timezone('America/Sao_Paulo')
 
 # Criar um Blueprint para o módulo de viaturas
 viatura_bp = Blueprint('viaturas', __name__, url_prefix='/viaturas')
@@ -9,48 +16,96 @@ viatura_bp = Blueprint('viaturas', __name__, url_prefix='/viaturas')
 
 @viatura_bp.route('/registrar', methods=['GET', 'POST'])
 def registrar_movimento():
+    # Para popular o formulário no GET ou em caso de erro no POST
+    form_data = request.form if request.method == 'POST' else {}
+    movimento_existente = None  # Para o modo de edição
+
     if request.method == 'POST':
         try:
-            # Coleta de dados do formulário
+            # Este é o "Nº Identificador da Unidade" vindo do formulário
+            identificador_unidade_str = request.form.get('ordem_servico')
+            # Este é o nome do setor, que deveria ser validado/preenchido
+            setor_solicitante_str = request.form.get('unidade')
+
+            setor_encontrado = get_setor_por_identificador(identificador_unidade_str)
+
+            if not setor_encontrado:
+                flash(f'Número Identificador de Unidade "{identificador_unidade_str}" não encontrado ou inválido.',
+                      'danger')
+                # Manter os dados já inseridos no formulário
+                return render_template('viaturas/registrar_movimento.html',
+                                       modo_edicao=False,  # Ou True, dependendo do contexto
+                                       # Repopular todos os campos do formulário com request.form
+                                       movimento=form_data,  # Passa os dados do formulário como um dicionário
+                                       default_data=form_data.get('data_movimento',
+                                                                  datetime.now(BR_TZ).strftime('%Y-%m-%d')),
+                                       default_hora_entrada=form_data.get('hora_entrada',
+                                                                          datetime.now(BR_TZ).strftime('%H:%M'))
+                                       # ... outros campos para repopular ...
+                                       )
+
+            # Validar se o setor_solicitante_str (se o usuário puder editá-lo) corresponde ao setor_encontrado
+            # Se o campo for readonly e preenchido por JS, esta validação é uma segurança extra.
+            if setor_solicitante_str != setor_encontrado and setor_solicitante_str:  # Adicionado and setor_solicitante_str para evitar erro se estiver vazio
+                # Se o campo setor_solicitante_str for preenchido via JS e for readonly,
+                # esta condição idealmente não deveria acontecer.
+                # Mas se o usuário conseguir alterar, podemos forçar o valor correto ou alertar.
+                flash(f'O Setor Solicitante foi corrigido para "{setor_encontrado}" com base no Nº Identificador.',
+                      'info')
+
+            # Coleta dos demais dados do formulário
             data_movimento_str = request.form.get('data_movimento')
             hora_entrada_str = request.form.get('hora_entrada')
-            hora_saida_str = request.form.get('hora_saida')
+            data_registro_sistema_br = datetime.now(BR_TZ)
+            data_movimento = datetime.strptime(data_movimento_str,
+                                               '%Y-%m-%d').date() if data_movimento_str else datetime.now(BR_TZ).date()
+            hora_entrada = datetime.strptime(hora_entrada_str, '%H:%M').time() if hora_entrada_str else None
 
             novo_movimento = MovimentoViatura(
-                data_movimento=datetime.strptime(data_movimento_str,
-                                                 '%Y-%m-%d').date() if data_movimento_str else datetime.utcnow().date(),
-                unidade=request.form.get('unidade'),
-                ordem_servico=request.form.get('ordem_servico'),
-                hora_entrada=datetime.strptime(hora_entrada_str, '%H:%M').time() if hora_entrada_str else None,
-                # hora_saida será preenchida na edição/saída
+                data_movimento=data_movimento,
+                # 'unidade' no modelo recebe o nome do setor/unidade encontrado
+                unidade=setor_encontrado,
+                # 'ordem_servico' no modelo recebe o "Nº Identificador da Unidade"
+                ordem_servico=identificador_unidade_str,
+                hora_entrada=hora_entrada,
+                # Preencher os outros campos do modelo com request.form.get(...)
                 veiculo_tipo=request.form.get('veiculo_tipo'),
                 placa_veiculo=request.form.get('placa_veiculo').upper(),
                 condutor_nome=request.form.get('condutor_nome'),
                 tipo_movimentacao=request.form.get('tipo_movimentacao'),
                 detalhe_movimentacao=request.form.get('detalhe_movimentacao'),
-                responsavel_atendimento=request.form.get('responsavel_atendimento')
-                # Idealmente pegar do usuário logado, se aplicável
+                responsavel_atendimento=request.form.get('responsavel_atendimento'),
+                data_registro_sistema=data_registro_sistema_br
             )
             db.session.add(novo_movimento)
             db.session.commit()
             flash('Movimento de viatura registrado com sucesso!', 'success')
             return redirect(url_for('viaturas.listar_movimentos'))
-        except ValueError as e:
+
+        except ValueError as e:  # Para erros de conversão de data/hora
             db.session.rollback()
             flash(f'Erro de formato nos dados: {str(e)}', 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'Erro inesperado ao registrar movimento: {str(e)}', 'danger')
-            # Adicionar log aqui: app.logger.error(f"Erro ao registrar movimento: {str(e)}")
+            # app.logger.error(f"Erro ao registrar movimento: {str(e)}") # Adicionar log
 
-    # Valores padrão para o formulário GET
-    default_data = datetime.utcnow().strftime('%Y-%m-%d')
-    default_hora_entrada = datetime.now().strftime('%H:%M')
-
+    # Lógica para GET (ou se POST falhou e retornou para o template)
     return render_template('viaturas/registrar_movimento.html',
                            modo_edicao=False,
-                           default_data=default_data,
-                           default_hora_entrada=default_hora_entrada)
+                           movimento=form_data if form_data else movimento_existente,
+                           # Passa dados do form ou um movimento para edição
+                           default_data=form_data.get('data_movimento', datetime.now(BR_TZ).strftime('%Y-%m-%d')),
+                           default_hora_entrada=form_data.get('hora_entrada', datetime.now(BR_TZ).strftime('%H:%M')))
+
+
+# Rota para buscar a unidade pelo identificador (para o JavaScript)
+@viatura_bp.route('/get_unidade_info/<identificador>')
+def get_unidade_info(identificador):
+    setor = get_setor_por_identificador(identificador)
+    if setor:
+        return jsonify({'success': True, 'setor_solicitante': setor})
+    return jsonify({'success': False, 'message': 'Identificador não encontrado'})
 
 
 @viatura_bp.route('/')
