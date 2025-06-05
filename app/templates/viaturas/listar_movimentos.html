@@ -128,7 +128,7 @@
                                         <div class="mb-3">
                                             <label for="hora_saida_modal-{{ mov.id }}" class="form-label">Hora de Saída:</label>
                                             {# Usando a variável datetime passada pela rota #}
-                                            <input type="time" class="form-control" name="hora_saida_modal" id="hora_saida_modal-{{ mov.id }}" value="{{ datetime.now().strftime('%H:%M') }}" required>
+                                            <input type="time" class="form-control" name="hora_saida_modal" id="hora_saida_modal-{{ mov.id }}" value="{{ datetime_module.now(BR_TZ).strftime('%H:%M') }}" required>
                                         </div>
                                         <p><strong>Data do Movimento:</strong> {{ mov.data_movimento.strftime('%d/%m/%Y') }}</p>
                                         <p><strong>Hora de Entrada:</strong> {{ mov.hora_entrada.strftime('%H:%M') }}</p>
