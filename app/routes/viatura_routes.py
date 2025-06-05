@@ -5,14 +5,11 @@ from app.models.viatura import MovimentoViatura
 from datetime import datetime, time  # Adicionado time
 from ..utils import get_setor_por_identificador # Certifique-se que o import está correto
 
-
-
 # Defina o fuso horário de Brasília
 BR_TZ = pytz.timezone('America/Sao_Paulo')
 
 # Criar um Blueprint para o módulo de viaturas
 viatura_bp = Blueprint('viaturas', __name__, url_prefix='/viaturas')
-
 
 @viatura_bp.route('/registrar', methods=['GET', 'POST'])
 def registrar_movimento():
@@ -241,6 +238,8 @@ def registrar_saida(movimento_id):
             return redirect(url_for('viaturas.listar_movimentos'))
 
         movimento.hora_saida = datetime.strptime(hora_saida_str, '%H:%M').time()
+        movimento.ultima_atualizacao = datetime.now(BR_TZ)
+
         db.session.commit()
         flash(f'Saída registrada para a placa {movimento.placa_veiculo}.', 'success')
     except ValueError:
