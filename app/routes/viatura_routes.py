@@ -108,9 +108,11 @@ def get_unidade_info(identificador):
 @viatura_bp.route('/')
 @viatura_bp.route('/listar')
 def listar_movimentos():
+    # Inicia a query base
     query = MovimentoViatura.query
 
     # Coletar parâmetros de filtro da URL
+    # Usar .get com um valor padrão None ou string vazia para evitar erros se o parâmetro não existir
     unidade_filtro = request.args.get('unidade')
     data_inicial_str = request.args.get('data_inicial')
     data_final_str = request.args.get('data_final')
@@ -121,9 +123,10 @@ def listar_movimentos():
     condutor_filtro = request.args.get('condutor')
     responsavel_filtro = request.args.get('responsavel')
 
-    # Aplicar filtros à query
+    # Aplicar filtros à query dinamicamente
     if unidade_filtro:
-        query = query.filter(MovimentoViatura.unidade.ilike(f'%{unidade_filtro}%'))
+        query = query.filter(MovimentoViatura.setor_solicitante.ilike(
+            f'%{unidade_filtro}%'))  # Assumindo que 'unidade' no filtro se refere a 'setor_solicitante' no modelo
     if placa_filtro:
         query = query.filter(MovimentoViatura.placa_veiculo.ilike(f'%{placa_filtro}%'))
     if tipo_mov_filtro:
@@ -150,9 +153,6 @@ def listar_movimentos():
     if hora_inicial_str:
         try:
             hora_inicial_obj = datetime.strptime(hora_inicial_str, '%H:%M').time()
-            # Para filtrar por hora_entrada, pode ser necessário considerar a data também,
-            # ou se o campo for apenas Time, aplicar diretamente.
-            # Se data_inicial_str for obrigatório com hora_inicial_str, a query pode ser mais precisa.
             query = query.filter(MovimentoViatura.hora_entrada >= hora_inicial_obj)
         except ValueError:
             flash('Formato de Hora Inicial inválido. Use HH:MM.', 'warning')
@@ -164,16 +164,17 @@ def listar_movimentos():
         except ValueError:
             flash('Formato de Hora Final inválido. Use HH:MM.', 'warning')
 
+    # Ordena e executa a query APÓS todos os filtros terem sido aplicados
     movimentos = query.order_by(MovimentoViatura.data_movimento.desc(), MovimentoViatura.hora_entrada.desc()).all()
 
-    # Passar datetime para o template para o modal de registrar saída
-    # Também é bom passar os argumentos do request para repopular os filtros,
-    # embora o HTML já esteja fazendo isso com request.args.get
+    # Gera a string da hora atual de Brasília para o modal
+    hora_atual_para_modal = datetime.now(BR_TZ).strftime('%H:%M')
+
     return render_template(
         'viaturas/listar_movimentos.html',
         movimentos=movimentos,
-        datetime=datetime,  # Para o modal de registrar saída
-        request_args=request.args  # Para facilitar acesso no template se necessário
+        hora_atual_para_modal=hora_atual_para_modal,  # Passa a hora formatada para o template
+        request_args=request.args  # Para repopular os campos de filtro no formulário HTML
     )
 
 @viatura_bp.route('/editar/<movimento_id>', methods=['GET', 'POST'])
